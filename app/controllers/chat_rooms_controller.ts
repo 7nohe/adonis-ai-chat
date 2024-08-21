@@ -5,9 +5,14 @@ export default class ChatRoomsController {
   /**
    * Display a list of resource
    */
-  async index({}: HttpContext) {
+  async index({ inertia }: HttpContext) {
     const rooms = await ChatRoom.all()
-    return rooms
+    return inertia.render('chat-rooms/index', {
+      rooms: rooms.map((r) => ({
+        id: r.id,
+        name: r.name,
+      })),
+    })
   }
 
   /**
@@ -23,9 +28,14 @@ export default class ChatRoomsController {
   /**
    * Show individual record
    */
-  async show({ params }: HttpContext) {
-    const room = await ChatRoom.find(params.id)
-    return room
+  async show({ params, inertia }: HttpContext) {
+    const room = await ChatRoom.findByOrFail(params.id)
+    return inertia.render('chat-rooms/show', {
+      room: {
+        id: room.id,
+        name: room.name,
+      },
+    })
   }
 
   /**
