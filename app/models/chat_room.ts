@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import ChatMessage from './chat_message.js'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 
 export default class ChatRoom extends BaseModel {
   @column({ isPrimary: true })
@@ -7,6 +9,9 @@ export default class ChatRoom extends BaseModel {
 
   @column()
   declare name: string
+
+  @hasMany(() => ChatMessage)
+  declare chatMessages: HasMany<typeof ChatMessage>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

@@ -31,7 +31,6 @@ services:
       - postgres:/var/lib/postgresql/data
 volumes:
   postgres:
-
 ```
 
 ```bash
@@ -44,7 +43,6 @@ docker compose up -d
 DB_DATABASE=postgres
 ```
 
-
 ```bash
 npm run dev
 ```
@@ -52,9 +50,8 @@ npm run dev
 ## Model/Migration
 
 ```bash
-node ace make:model ChatRoom --migration --factory 
+node ace make:model ChatRoom --migration --factory
 ```
-
 
 app/models/chat_room.tsを編集
 
@@ -67,7 +64,7 @@ export default class ChatRoom extends BaseModel {
   declare id: number
 
   @column()
-  declare name: string;
+  declare name: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -105,7 +102,6 @@ node ace migration:run
 ```
 
 REPLで動作確認
-
 
 ```bash
 node ace repl
@@ -207,7 +203,6 @@ indexアクションを編集
 
 `http://localhost:3333/chat-rooms` と `http://localhost:3333/chat-rooms/1` へアクセスしてみる
 
-
 ## View
 
 一覧画面のinertia/pages/chat-rooms/index.tsxを手動で作成
@@ -246,12 +241,9 @@ export default function Show(props: { room: ChatRoom }) {
     </div>
   )
 }
-
 ```
 
-
 app/controllers/chat_rooms_controller.tsを変更
-
 
 ```ts
 async index({ inertia }: HttpContext) {
@@ -265,9 +257,7 @@ async show({ params, inertia }: HttpContext) {
 }
 ```
 
-
 (オプショナル) propsの型をControllerとReactで共有する
-
 
 inertia/pages/chat-rooms/index.tsxを変更
 
@@ -339,11 +329,9 @@ async show({ params, inertia }: HttpContext) {
 
 https://docs.adonisjs.com/guides/basics/validation
 
-
 ```bash
 node ace make:validator ChatRoom --resource
 ```
-
 
 app/validators/chat_room.ts
 
@@ -441,9 +429,7 @@ export default function Create(props: {
     </div>
   )
 }
-
 ```
-
 
 inertia/pages/chat-rooms/edit.tsxを作成
 
@@ -485,14 +471,11 @@ export default function Edit(
     </div>
   )
 }
-
 ```
-
 
 (オプショナル) paramsのバリデーション
 
 https://docs.adonisjs.com/guides/basics/validation#validating-cookies-headers-and-route-params
-
 
 app/validators/chat_room.tsを変更
 
@@ -504,10 +487,10 @@ export const deleteChatRoomValidator = vine.compile(
     }),
   })
 )
-
 ```
 
 app/controllers/chat_rooms_controller.tsを変更
+
 ```ts
   async destroy({ request, response }: HttpContext) {
     const { params } = await request.validateUsing(deleteChatRoomValidator)
@@ -518,6 +501,7 @@ app/controllers/chat_rooms_controller.tsを変更
 ```
 
 inertia/pages/chat-rooms/show.tsxに削除ボタンを追加
+
 ```tsx
 <Link
   style={{
@@ -534,4 +518,377 @@ inertia/pages/chat-rooms/show.tsxに削除ボタンを追加
 >
   削除
 </Link>
+```
+
+## (optional) Seeding
+
+## Relation
+
+```bash
+node ace make:model  ChatMessage -m -c
+```
+
+```ts
+import { BaseSchema } from '@adonisjs/lucid/schema'
+
+export default class extends BaseSchema {
+  protected tableName = 'chat_messages'
+
+  async up() {
+    this.schema.createTable(this.tableName, (table) => {
+      table.increments('id')
+      table.integer('chat_room_id').unsigned().references('chat_rooms.id').onDelete('CASCADE')
+      table.string('message').notNullable()
+      table.string('role').notNullable()
+      table.timestamp('created_at')
+      table.timestamp('updated_at')
+    })
+  }
+
+  async down() {
+    this.schema.dropTable(this.tableName)
+  }
+}
+```
+
+```bash
+node ace migration:run
+```
+
+```ts
+import { DateTime } from 'luxon'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import ChatMessage from './chat_message.js'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
+
+export default class ChatRoom extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @column()
+  declare name: string
+
+  @hasMany(() => ChatMessage)
+  declare chatMessages: HasMany<typeof ChatMessage>
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+```
+
+```ts
+import { DateTime } from 'luxon'
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import ChatRoom from './chat_room.js'
+import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+
+export default class ChatMessage extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @column()
+  declare chatRoomId: number
+
+  @belongsTo(() => ChatRoom)
+  declare user: BelongsTo<typeof ChatRoom>
+
+  @column()
+  declare message: string
+
+  @column()
+  declare role: string
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+```
+
+chat_rooms_controller.ts:
+
+```ts
+  async show({ request, inertia }: HttpContext) {
+    const { params } = await request.validateUsing(showChatRoomValidator)
+    const room = await ChatRoom.findOrFail(params.id)
+    await room.load('chatMessages')
+    return inertia.render('chat-rooms/show', {
+      room: {
+        id: room.id,
+        name: room.name,
+        chatMessages:
+          room.chatMessages?.map((m) => ({
+            id: m.id,
+            chatRoomId: m.chatRoomId,
+            message: m.message,
+            role: m.role,
+            createdAt: m.createdAt,
+            updatedAt: m.updatedAt,
+          })) ?? [],
+      },
+    })
+  }
+```
+
+## Streaming
+
+start/routes.ts:
+
+```ts
+import router from '@adonisjs/core/services/router'
+router.on('/').renderInertia('home', { version: 6 })
+
+const ChatRoomsController = () => import('#controllers/chat_rooms_controller')
+const ChatMessagesController = () => import('#controllers/chat_messages_controller')
+
+router.resource('chat-rooms', ChatRoomsController)
+router.resource('chat-rooms.chat-messages', ChatMessagesController)
+```
+
+```bash
+npm install openai
+```
+
+.env:
+
+```text
+OPENAI_API_KEY=sk-proj-XXXXXXXXXXXXXX
+```
+
+chat_messages_controller.ts:
+
+```ts
+import ChatRoom from '#models/chat_room'
+import type { HttpContext } from '@adonisjs/core/http'
+import OpenAI from 'openai'
+import env from '#start/env'
+
+const openai = new OpenAI({
+  apiKey: env.get('OPENAI_API_KEY'),
+})
+
+export default class ChatMessagesController {
+  async store({ request, response }: HttpContext) {
+    const { message, chatRoomId } = request.body()
+    const chatRoom = await ChatRoom.findOrFail(chatRoomId)
+    await chatRoom.related('chatMessages').create({
+      message,
+      role: 'user',
+    })
+
+    const chatMessages = await chatRoom
+      .related('chatMessages')
+      .query()
+      .orderBy('created_at', 'asc')
+      .exec()
+
+    const messages = chatMessages.map((m) => ({
+      role: m.role as 'user' | 'system',
+      content: m.message,
+    }))
+
+    const chatStream = await openai.beta.chat.completions.stream({
+      model: 'gpt-4',
+      messages,
+      stream: true,
+    })
+
+    let responseText = ''
+
+    for await (const part of chatStream) {
+      const content = part.choices[0]?.delta?.content ?? ''
+      responseText += content
+      response.response.write(content)
+    }
+    response.response.on('close', async () => {
+      await chatRoom.related('chatMessages').create({
+        message: responseText,
+        role: 'system',
+      })
+
+      response.response.end()
+    })
+  }
+}
+```
+
+inertia/pages/chat-rooms/show.tsx:
+
+```tsx
+import { Link } from '@inertiajs/react'
+import { InferPageProps } from '@adonisjs/inertia/types'
+import ChatRoomsController from '#controllers/chat_rooms_controller'
+import { useState } from 'react'
+
+function getCookie(name: string) {
+  let matches = document.cookie.match(
+    new RegExp('(?:^|; )' + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)')
+  )
+  return matches ? decodeURIComponent(matches[1]) : undefined
+}
+
+export default function Show(props: InferPageProps<ChatRoomsController, 'show'>) {
+  const { room } = props
+  const [message, setMessage] = useState('')
+  const initialMessages = room.chatMessages.map((m) => ({
+    content: m.message,
+    role: m.role as 'user' | 'system',
+  }))
+  const [chatMessages, setChatMessages] = useState<
+    {
+      content: string
+      role: 'user' | 'system'
+    }[]
+  >(initialMessages)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const newMessagesWithInput = [...chatMessages]
+    newMessagesWithInput.push({ role: 'user', content: message })
+    setChatMessages(newMessagesWithInput)
+    setMessage('')
+
+    const xsrfToken = getCookie('XSRF-TOKEN')
+    try {
+      const res = await fetch(`/chat-rooms/${room.id}/chat-messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': xsrfToken ?? '',
+        },
+        body: JSON.stringify({
+          message,
+          chatRoomId: room.id,
+        }),
+      })
+      const reader = res.body?.getReader()
+      if (!reader) return
+      let decoder = new TextDecoder()
+      let content = ''
+      let done = false
+      let isFirst = true
+      while (!done) {
+        const data = await reader.read()
+        done = data.done
+        if (done) break
+        const text = decoder.decode(data.value, { stream: true })
+        content += text
+        let newMessages = [...newMessagesWithInput]
+        if (isFirst) {
+          newMessages.push({
+            role: 'system',
+            content,
+          })
+        } else {
+          newMessages.splice(-1, 1, {
+            role: 'system',
+            content,
+          })
+        }
+        setChatMessages(newMessages)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  return (
+    <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column' }}>
+      <h2>{room.name}</h2>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '0.5rem',
+          width: '100%',
+        }}
+      >
+        <Link
+          style={{
+            width: 'fit-content',
+          }}
+          href={`/chat-rooms/${room.id}/edit`}
+        >
+          編集
+        </Link>
+        <Link
+          style={{
+            color: 'red',
+            width: 'fit-content',
+            border: 'none',
+            textDecoration: 'underline',
+            fontSize: '1rem',
+            cursor: 'pointer',
+          }}
+          href={`/chat-rooms/${room.id}`}
+          method="delete"
+          as="button"
+        >
+          削除
+        </Link>
+        <Link
+          style={{
+            width: 'fit-content',
+          }}
+          href="/chat-rooms"
+        >
+          戻る
+        </Link>
+      </div>
+      {/* Chat UI */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          marginTop: '2rem',
+        }}
+      >
+        {chatMessages.map((m, index) => (
+          <div key={index}>
+            <p>
+              {m.role === 'user' ? 'You' : 'AI'}: {m.content}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <form
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          marginTop: '2rem',
+        }}
+        onSubmit={handleSubmit}
+      >
+        <input
+          type="text"
+          style={{
+            padding: '0.5rem 1rem',
+            border: '1px solid black',
+          }}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: 'blue',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Send
+        </button>
+      </form>
+    </div>
+  )
+}
 ```

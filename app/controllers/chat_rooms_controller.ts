@@ -45,10 +45,20 @@ export default class ChatRoomsController {
   async show({ request, inertia }: HttpContext) {
     const { params } = await request.validateUsing(showChatRoomValidator)
     const room = await ChatRoom.findOrFail(params.id)
+    await room.load('chatMessages')
     return inertia.render('chat-rooms/show', {
       room: {
         id: room.id,
         name: room.name,
+        chatMessages:
+          room.chatMessages?.map((m) => ({
+            id: m.id,
+            chatRoomId: m.chatRoomId,
+            message: m.message,
+            role: m.role,
+            createdAt: m.createdAt,
+            updatedAt: m.updatedAt,
+          })) ?? [],
       },
     })
   }
