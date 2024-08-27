@@ -893,6 +893,28 @@ node ace repl
 > (js) await models.chat_message.first()
 ```
 
+show.tsxに以下を追加
+
+```tsx
+{/* Chat UI */}
+<div
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    marginTop: '2rem',
+  }}
+>
+  {room.chatMessages.map((m, index) => (
+    <div key={index}>
+      <p>
+        {m.role === 'user' ? '🙂' : '🤖'}: {m.message}
+      </p>
+    </div>
+  ))}
+</div>
+```
+
 ## Streaming
 
 start/routes.ts:
@@ -1111,7 +1133,7 @@ export default function Show(props: InferPageProps<ChatRoomsController, 'show'>)
           {chatMessages.map((m, index) => (
             <div key={index}>
               <p>
-                {m.role === 'user' ? 'You' : 'AI'}: {m.content}
+                {m.role === 'user' ? '🙂' : '🤖'}: {m.content}
               </p>
             </div>
           ))}
