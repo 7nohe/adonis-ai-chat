@@ -184,6 +184,7 @@ routes.tsにルートを設定
 
 ```ts
 const ChatRoomsController = () => import('#controllers/chat_rooms_controller')
+router.on('/').redirect('/chat-rooms')
 router.resource('chat-rooms', ChatRoomsController)
 ```
 

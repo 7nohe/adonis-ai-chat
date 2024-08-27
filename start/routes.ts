@@ -8,7 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
-router.on('/').renderInertia('home', { version: 6 })
+router.on('/').redirect('/chat-rooms')
 
 const ChatRoomsController = () => import('#controllers/chat_rooms_controller')
 const ChatMessagesController = () => import('#controllers/chat_messages_controller')
