@@ -883,6 +883,16 @@ chat_rooms_controller.ts:
   }
 ```
 
+Replでデータを作成して表示されるか確認
+
+```bash
+node ace repl
+> (js) loadModels()
+> (js) const chatRoom = await models.chat_room.first()
+> (js) await chatRoom.related('chatMessages').create({ role: 'user', message: 'Hi!' })
+> (js) await models.chat_message.first()
+```
+
 ## Streaming
 
 start/routes.ts:
