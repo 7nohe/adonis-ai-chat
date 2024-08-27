@@ -618,51 +618,36 @@ index.tsxに新規作成リンクを追加
 + <Link href="/chat-rooms/create">新規作成</Link>
 ```
 
-show.tsxに編集、削除リンクを追加
+show.tsxに編集リンクを追加
 
 ```diff tsx
 <h2>{room.name}</h2>
-<div
-  style={{
-    display: 'flex',
-    flexDirection: 'row',
-    gap: '0.5rem',
-    width: '100%',
-  }}
->
-  <Link
-    style={{
-      width: 'fit-content',
-    }}
-    href={`/chat-rooms/${room.id}/edit`}
-  >
-    編集
-  </Link>
-  <Link
-    style={{
-      color: 'red',
-      width: 'fit-content',
-      border: 'none',
-      textDecoration: 'underline',
-      fontSize: '1rem',
-      cursor: 'pointer',
-    }}
-    href={`/chat-rooms/${room.id}`}
-    method="delete"
-    as="button"
-  >
-    削除
-  </Link>
-  <Link
-    style={{
-      width: 'fit-content',
-    }}
-    href="/chat-rooms"
-  >
-    戻る
-  </Link>
-</div>
-
+-<Link href="/chat-rooms">戻る</Link>
++<div
++  style={{
++    display: 'flex',
++    flexDirection: 'row',
++    gap: '0.5rem',
++    width: '100%',
++  }}
++>
++  <Link
++    style={{
++      width: 'fit-content',
++    }}
++    href={`/chat-rooms/${room.id}/edit`}
++  >
++    編集
++  </Link>
++  <Link
++    style={{
++      width: 'fit-content',
++    }}
++    href="/chat-rooms"
++  >
++    戻る
++  </Link>
++</div>
 ```
 
 (オプショナル) paramsのバリデーション
@@ -684,11 +669,12 @@ export const deleteChatRoomValidator = vine.compile(
 app/controllers/chat_rooms_controller.tsを変更
 
 ```ts
-  async destroy({ request, response }: HttpContext) {
-    const { params } = await request.validateUsing(deleteChatRoomValidator)
-    const room = await ChatRoom.findOrFail(params.id)
-    await room.delete()
-    return response.redirect('/chat-rooms')
+-  async destroy({ params }: HttpContext) {
++  async destroy({ request, response }: HttpContext) {
++    const { params } = await request.validateUsing(deleteChatRoomValidator)
++    const room = await ChatRoom.findOrFail(params.id)
++    await room.delete()
++    return response.redirect('/chat-rooms')
   }
 ```
 
