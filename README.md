@@ -1,4 +1,12 @@
+## AdonisJS Hands-on
+
+## About AdonisJS
+
+https://docs.adonisjs.com/guides/preface/introduction
+
 ## プロジェクト作成
+
+https://docs.adonisjs.com/guides/getting-started/installation
 
 ```bash
 npm init adonisjs@latest adonis-ai-chat
@@ -48,6 +56,8 @@ npm run dev
 ```
 
 ## Model/Migration
+
+https://docs.adonisjs.com/guides/database/lucid
 
 ```bash
 node ace make:model ChatRoom --migration --factory
@@ -133,6 +143,8 @@ node ace repl
 
 ## Controller
 
+https://docs.adonisjs.com/guides/basics/controllers#controllers
+
 ```bash
 node ace make:controller ChatRoom -r
 ```
@@ -205,6 +217,8 @@ indexアクションを編集
 `http://localhost:3333/chat-rooms` と `http://localhost:3333/chat-rooms/1` へアクセスしてみる
 
 ## View
+
+https://docs.adonisjs.com/guides/views-and-templates/inertia
 
 一覧画面のinertia/pages/chat-rooms/index.tsxを手動で作成
 
@@ -619,9 +633,80 @@ inertia/pages/chat-rooms/show.tsxに削除ボタンを追加
 </Link>
 ```
 
-## (optional) Seeding
+## (optional) Database seeders
 
-## Relation
+https://lucid.adonisjs.com/docs/seeders
+
+```bash
+node ace make:seeder ChatRoom
+```
+
+database/seeders/chat_room_seeder.tsを編集
+
+```ts
+import ChatRoom from '#models/chat_room'
+import { BaseSeeder } from '@adonisjs/lucid/seeders'
+
+export default class extends BaseSeeder {
+  async run() {
+    await ChatRoom.createMany([
+      {
+        name: 'Lobby',
+      },
+      {
+        name: 'General',
+      },
+      {
+        name: 'Random',
+      },
+    ])
+  }
+}
+
+```
+
+
+```bash
+node ace db:seed
+# or
+node ace db:seed --files "./database/seeders/chat_room_seeder.ts"
+```
+
+Factoryを使用する場合はchat_room_factory.tsを編集
+
+```ts
+import factory from '@adonisjs/lucid/factories'
+import ChatRoom from '#models/chat_room'
+
+export const ChatRoomFactory = factory
+  .define(ChatRoom, async ({ faker }) => {
+    return {
+      name: faker.lorem.words(2),
+    }
+  })
+  .build()
+
+```
+
+chat_room_seeder.tsを編集
+
+```ts
+import { ChatRoomFactory } from '#database/factories/chat_room_factory'
+import { BaseSeeder } from '@adonisjs/lucid/seeders'
+
+export default class extends BaseSeeder {
+  async run() {
+    await ChatRoomFactory.createMany(10)
+  }
+}
+```
+
+https://lucid.adonisjs.com/docs/model-factories
+
+
+## Relationships
+
+https://lucid.adonisjs.com/docs/relationships
 
 ```bash
 node ace make:model  ChatMessage -m -c
