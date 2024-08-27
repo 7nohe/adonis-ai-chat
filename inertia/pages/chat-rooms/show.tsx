@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
 import { useState } from 'react'
@@ -76,97 +76,100 @@ export default function Show(props: InferPageProps<ChatRoomsController, 'show'>)
   }
 
   return (
-    <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column' }}>
-      <h2>{room.name}</h2>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '0.5rem',
-          width: '100%',
-        }}
-      >
-        <Link
+    <>
+      <Head title={room.name} />
+      <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column' }}>
+        <h2>{room.name}</h2>
+        <div
           style={{
-            width: 'fit-content',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '0.5rem',
+            width: '100%',
           }}
-          href={`/chat-rooms/${room.id}/edit`}
         >
-          編集
-        </Link>
-        <Link
+          <Link
+            style={{
+              width: 'fit-content',
+            }}
+            href={`/chat-rooms/${room.id}/edit`}
+          >
+            編集
+          </Link>
+          <Link
+            style={{
+              color: 'red',
+              width: 'fit-content',
+              border: 'none',
+              textDecoration: 'underline',
+              fontSize: '1rem',
+              cursor: 'pointer',
+            }}
+            href={`/chat-rooms/${room.id}`}
+            method="delete"
+            as="button"
+          >
+            削除
+          </Link>
+          <Link
+            style={{
+              width: 'fit-content',
+            }}
+            href="/chat-rooms"
+          >
+            戻る
+          </Link>
+        </div>
+        {/* Chat UI */}
+        <div
           style={{
-            color: 'red',
-            width: 'fit-content',
-            border: 'none',
-            textDecoration: 'underline',
-            fontSize: '1rem',
-            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            marginTop: '2rem',
           }}
-          href={`/chat-rooms/${room.id}`}
-          method="delete"
-          as="button"
         >
-          削除
-        </Link>
-        <Link
-          style={{
-            width: 'fit-content',
-          }}
-          href="/chat-rooms"
-        >
-          戻る
-        </Link>
-      </div>
-      {/* Chat UI */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          marginTop: '2rem',
-        }}
-      >
-        {chatMessages.map((m, index) => (
-          <div key={index}>
-            <p>
-              {m.role === 'user' ? 'You' : 'AI'}: {m.content}
-            </p>
-          </div>
-        ))}
-      </div>
+          {chatMessages.map((m, index) => (
+            <div key={index}>
+              <p>
+                {m.role === 'user' ? '🙂' : '🤖'}: {m.content}
+              </p>
+            </div>
+          ))}
+        </div>
 
-      <form
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          marginTop: '2rem',
-        }}
-        onSubmit={handleSubmit}
-      >
-        <input
-          type="text"
+        <form
           style={{
-            padding: '0.5rem 1rem',
-            border: '1px solid black',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            marginTop: '2rem',
           }}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: 'blue',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          onSubmit={handleSubmit}
         >
-          Send
-        </button>
-      </form>
-    </div>
+          <input
+            type="text"
+            style={{
+              padding: '0.5rem 1rem',
+              border: '1px solid black',
+            }}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'blue',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Send
+          </button>
+        </form>
+      </div>
+    </>
   )
 }

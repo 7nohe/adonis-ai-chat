@@ -209,20 +209,24 @@ indexアクションを編集
 一覧画面のinertia/pages/chat-rooms/index.tsxを手動で作成
 
 ```tsx
-import { Link } from '@inertiajs/react'
+import { Link, Head } from '@inertiajs/react'
 import ChatRoom from '#models/chat_room'
+const title = 'チャット履歴'
 export default function Index(props: { rooms: ChatRoom[] }) {
   return (
-    <div style={{ padding: '6rem' }}>
-      <h2>チャット履歴</h2>
-      <ul>
-        {props.rooms.map((room) => (
-          <li key={room.id}>
-            <Link href={`/chat-rooms/${room.id}`}>{room.name}</Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <Head title={title} />
+      <div style={{ padding: '6rem' }}>
+        <h2>{title}</h2>
+        <ul>
+          {props.rooms.map((room) => (
+            <li key={room.id}>
+              <Link href={`/chat-rooms/${room.id}`}>{room.name}</Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   )
 }
 ```
@@ -230,16 +234,19 @@ export default function Index(props: { rooms: ChatRoom[] }) {
 詳細画面のinertia/pages/chat-rooms/show.tsxを手動で作成
 
 ```tsx
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import ChatRoom from '#models/chat_room'
 export default function Show(props: { room: ChatRoom }) {
   const { room } = props
   return (
-    <div style={{ padding: '6rem' }}>
-      <h2>{room.name}</h2>
-      <Link href="/chat-rooms">戻る</Link>
-      <p>ここにチャットUI作成予定</p>
-    </div>
+    <>
+      <Head title={room.name} />
+      <div style={{ padding: '6rem' }}>
+        <h2>{room.name}</h2>
+        <Link href="/chat-rooms">戻る</Link>
+        <p>ここにチャットUI作成予定</p>
+      </div>
+    </>
   )
 }
 ```
@@ -263,21 +270,25 @@ async show({ params, inertia }: HttpContext) {
 inertia/pages/chat-rooms/index.tsxを変更
 
 ```ts
-import { Link } from '@inertiajs/react'
+import { Link, Head } from '@inertiajs/react'
 import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
+const title = 'チャット履歴'
 export default function Index(props: InferPageProps<ChatRoomsController, 'index'>) {
   return (
-    <div style={{ padding: '6rem' }}>
-      <h2>チャット履歴</h2>
-      <ul>
-        {props.rooms.map((room) => (
-          <li key={room.id}>
-            <Link href={`/chat-rooms/${room.id}`}>{room.name}</Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <Head title={title} />
+      <div style={{ padding: '6rem' }}>
+        <h2>{title}</h2>
+        <ul>
+          {props.rooms.map((room) => (
+            <li key={room.id}>
+              <Link href={`/chat-rooms/${room.id}`}>{room.name}</Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   )
 }
 ```
@@ -285,17 +296,20 @@ export default function Index(props: InferPageProps<ChatRoomsController, 'index'
 inertia/pages/chat-rooms/show.tsxを変更
 
 ```tsx
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
 export default function Show(props: InferPageProps<ChatRoomsController, 'show'>) {
   const { room } = props
   return (
-    <div style={{ padding: '6rem' }}>
-      <h2>{room.name}</h2>
-      <Link href="/chat-rooms">戻る</Link>
-      <p>ここにチャットUI作成予定</p>
-    </div>
+    <>
+      <Head title={room.name} />
+      <div style={{ padding: '6rem' }}>
+        <h2>{room.name}</h2>
+        <Link href="/chat-rooms">戻る</Link>
+        <p>ここにチャットUI作成予定</p>
+      </div>
+    </>
   )
 }
 ```
@@ -398,8 +412,9 @@ inertia/pages/chat-rooms/create.tsxを作成
 
 ```tsx
 import ChatRoom from '#models/chat_room'
-import { Link, router } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import { useState } from 'react'
+const title = 'ルームを作成'
 export default function Create(props: {
   errors?: { [key in keyof Pick<ChatRoom, 'name'>]: string[] }
 }) {
@@ -410,36 +425,78 @@ export default function Create(props: {
     await router.post('/chat-rooms', { name })
   }
   return (
-    <div style={{ padding: '6rem' }}>
-      <h2>ルームを作成</h2>
-      <Link href="/chat-rooms">戻る</Link>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">名前</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value)
+    <>
+      <Head title={title} />
+      <div style={{ padding: '6rem' }}>
+        <h2>{title}</h2>
+        <Link href="/chat-rooms">戻る</Link>
+        <form
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            width: '20rem',
+            marginTop: '1rem',
+          }}
+          onSubmit={handleSubmit}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '0.5rem',
             }}
-          />
+          >
+            <label
+              style={{
+                flex: 0.5,
+              }}
+              htmlFor="name"
+            >
+              名前
+            </label>
+            <input
+              type="text"
+              value={name}
+              style={{
+                flex: 2,
+              }}
+              onChange={(e) => {
+                setName(e.target.value)
+              }}
+            />
+          </div>
           {errors?.name && <p style={{ color: 'red' }}>{errors.name.join(', ')}</p>}
-        </div>
-        <button type="submit">作成</button>
-      </form>
-    </div>
+          <button
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'blue',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer',
+            }}
+            type="submit"
+          >
+            作成
+          </button>
+        </form>
+      </div>
+    </>
   )
 }
+
 ```
 
 inertia/pages/chat-rooms/edit.tsxを作成
 
 ```tsx
-import { Link, router } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
 import { useState } from 'react'
 import ChatRoom from '#models/chat_room'
+const title = 'ルームを編集'
 export default function Edit(
   props: InferPageProps<ChatRoomsController, 'edit'> & {
     errors?: { [key in keyof Pick<ChatRoom, 'name'>]: string[] }
@@ -452,26 +509,67 @@ export default function Edit(
     router.put(`/chat-rooms/${room.id}`, { name })
   }
   return (
-    <div style={{ padding: '6rem' }}>
-      <h2>ルームを編集</h2>
-      <Link href="/chat-rooms">戻る</Link>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">名前</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value)
+    <>
+      <Head title={title} />
+      <div style={{ padding: '6rem' }}>
+        <h2>{title}</h2>
+        <Link href="/chat-rooms">戻る</Link>
+        <form
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            width: '20rem',
+            marginTop: '1rem',
+          }}
+          onSubmit={handleSubmit}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '0.5rem',
             }}
-          />
+          >
+            <label
+              style={{
+                flex: 0.5,
+              }}
+              htmlFor="name"
+            >
+              名前
+            </label>
+            <input
+              type="text"
+              value={name}
+              style={{
+                flex: 2,
+              }}
+              onChange={(e) => {
+                setName(e.target.value)
+              }}
+            />
+          </div>
           {props.errors?.name && <p style={{ color: 'red' }}>{props.errors.name.join(', ')}</p>}
-        </div>
-        <button type="submit">更新</button>
-      </form>
-    </div>
+          <button
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'blue',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer',
+            }}
+            type="submit"
+          >
+            更新
+          </button>
+        </form>
+      </div>
+    </>
   )
 }
+
 ```
 
 (オプショナル) paramsのバリデーション
@@ -720,7 +818,7 @@ export default class ChatMessagesController {
 inertia/pages/chat-rooms/show.tsx:
 
 ```tsx
-import { Link } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
 import { useState } from 'react'
@@ -798,98 +896,101 @@ export default function Show(props: InferPageProps<ChatRoomsController, 'show'>)
   }
 
   return (
-    <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column' }}>
-      <h2>{room.name}</h2>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '0.5rem',
-          width: '100%',
-        }}
-      >
-        <Link
+    <>
+      <Head title={room.name} />
+      <div style={{ padding: '6rem', display: 'flex', flexDirection: 'column' }}>
+        <h2>{room.name}</h2>
+        <div
           style={{
-            width: 'fit-content',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '0.5rem',
+            width: '100%',
           }}
-          href={`/chat-rooms/${room.id}/edit`}
         >
-          編集
-        </Link>
-        <Link
+          <Link
+            style={{
+              width: 'fit-content',
+            }}
+            href={`/chat-rooms/${room.id}/edit`}
+          >
+            編集
+          </Link>
+          <Link
+            style={{
+              color: 'red',
+              width: 'fit-content',
+              border: 'none',
+              textDecoration: 'underline',
+              fontSize: '1rem',
+              cursor: 'pointer',
+            }}
+            href={`/chat-rooms/${room.id}`}
+            method="delete"
+            as="button"
+          >
+            削除
+          </Link>
+          <Link
+            style={{
+              width: 'fit-content',
+            }}
+            href="/chat-rooms"
+          >
+            戻る
+          </Link>
+        </div>
+        {/* Chat UI */}
+        <div
           style={{
-            color: 'red',
-            width: 'fit-content',
-            border: 'none',
-            textDecoration: 'underline',
-            fontSize: '1rem',
-            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            marginTop: '2rem',
           }}
-          href={`/chat-rooms/${room.id}`}
-          method="delete"
-          as="button"
         >
-          削除
-        </Link>
-        <Link
-          style={{
-            width: 'fit-content',
-          }}
-          href="/chat-rooms"
-        >
-          戻る
-        </Link>
-      </div>
-      {/* Chat UI */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          marginTop: '2rem',
-        }}
-      >
-        {chatMessages.map((m, index) => (
-          <div key={index}>
-            <p>
-              {m.role === 'user' ? 'You' : 'AI'}: {m.content}
-            </p>
-          </div>
-        ))}
-      </div>
+          {chatMessages.map((m, index) => (
+            <div key={index}>
+              <p>
+                {m.role === 'user' ? 'You' : 'AI'}: {m.content}
+              </p>
+            </div>
+          ))}
+        </div>
 
-      <form
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          marginTop: '2rem',
-        }}
-        onSubmit={handleSubmit}
-      >
-        <input
-          type="text"
+        <form
           style={{
-            padding: '0.5rem 1rem',
-            border: '1px solid black',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            marginTop: '2rem',
           }}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: 'blue',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer',
-          }}
+          onSubmit={handleSubmit}
         >
-          Send
-        </button>
-      </form>
-    </div>
+          <input
+            type="text"
+            style={{
+              padding: '0.5rem 1rem',
+              border: '1px solid black',
+            }}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: 'blue',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Send
+          </button>
+        </form>
+      </div>
+    </>
   )
 }
 ```
