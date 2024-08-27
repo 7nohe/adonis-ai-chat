@@ -194,24 +194,31 @@ export default class ChatRoomsController {
 
 routes.tsにルートを設定
 
-```ts
-const ChatRoomsController = () => import('#controllers/chat_rooms_controller')
-router.on('/').redirect('/chat-rooms')
-router.resource('chat-rooms', ChatRoomsController)
+```diff ts
+import router from '@adonisjs/core/services/router'
++ const ChatRoomsController = () => import('#controllers/chat_rooms_controller')
+- router.on('/').renderInertia('home', { version: 6 })
++ router.on('/').redirect('/chat-rooms')
++ router.resource('chat-rooms', ChatRoomsController)
 ```
 
 indexアクションを編集
 
-```ts
+```diff ts
+import ChatRoom from '#models/chat_room'
+import type { HttpContext } from '@adonisjs/core/http'
+
+export default class ChatRoomsController {
   async index({}: HttpContext) {
-    const rooms = await ChatRoom.all()
-    return rooms
++    const rooms = await ChatRoom.all()
++    return rooms
   }
 
   async show({ params }: HttpContext) {
-    const room = await ChatRoom.findOrFail(params.id)
-    return room
++   const room = await ChatRoom.findOrFail(params.id)
++   return room
   }
+}
 ```
 
 `http://localhost:3333/chat-rooms` と `http://localhost:3333/chat-rooms/1` へアクセスしてみる
@@ -267,28 +274,36 @@ export default function Show(props: { room: ChatRoom }) {
 
 app/controllers/chat_rooms_controller.tsを変更
 
-```ts
-async index({ inertia }: HttpContext) {
+```diff ts
+-async index({ }: HttpContext) {
++async index({ inertia }: HttpContext) {
   const rooms = await ChatRoom.all()
-  return inertia.render('chat-rooms/index', { rooms })
+-  return rooms
++  return inertia.render('chat-rooms/index', { rooms })
 }
 
-async show({ params, inertia }: HttpContext) {
+-async show({ params }: HttpContext) {
++async show({ params, inertia }: HttpContext) {
   const room = await ChatRoom.findOrFail(params.id)
-  return inertia.render('chat-rooms/show', { room })
+-  return room
++  return inertia.render('chat-rooms/show', { room })
 }
 ```
+
+`http://localhost:3333/chat-rooms`へアクセスしてみる
 
 (オプショナル) propsの型をControllerとReactで共有する
 
 inertia/pages/chat-rooms/index.tsxを変更
 
-```ts
+```diff tsx
 import { Link, Head } from '@inertiajs/react'
-import { InferPageProps } from '@adonisjs/inertia/types'
+-import ChatRoom from '#models/chat_room'
++import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
 const title = 'チャット履歴'
-export default function Index(props: InferPageProps<ChatRoomsController, 'index'>) {
+-export default function Index(props: { rooms: ChatRoom[] }) {
++export default function Index(props: InferPageProps<ChatRoomsController, 'index'>) {
   return (
     <>
       <Head title={title} />
@@ -309,11 +324,13 @@ export default function Index(props: InferPageProps<ChatRoomsController, 'index'
 
 inertia/pages/chat-rooms/show.tsxを変更
 
-```tsx
+```diff tsx
 import { Head, Link } from '@inertiajs/react'
-import { InferPageProps } from '@adonisjs/inertia/types'
+-import ChatRoom from '#models/chat_room'
++import { InferPageProps } from '@adonisjs/inertia/types'
 import ChatRoomsController from '#controllers/chat_rooms_controller'
-export default function Show(props: InferPageProps<ChatRoomsController, 'show'>) {
+-export default function Show(props: { room: ChatRoom }) {
++export default function Show(props: InferPageProps<ChatRoomsController, 'show'>) {
   const { room } = props
   return (
     <>
@@ -332,25 +349,27 @@ app/controllers/chat_rooms_controller.tsを変更（Modelのシリアライズ�
 
 https://docs.adonisjs.com/guides/views-and-templates/inertia#model-serialization
 
-```ts
+```diff ts
 async index({ inertia }: HttpContext) {
   const rooms = await ChatRoom.all()
-  return inertia.render('chat-rooms/index', {
-    rooms: rooms.map((r) => ({
-      id: r.id,
-      name: r.name,
-    })),
-  })
+-  return inertia.render('chat-rooms/index', { rooms })
++  return inertia.render('chat-rooms/index', {
++    rooms: rooms.map((r) => ({
++      id: r.id,
++      name: r.name,
++    })),
++  })
 }
 
 async show({ params, inertia }: HttpContext) {
   const room = await ChatRoom.findOrFail(params.id)
-  return inertia.render('chat-rooms/show', {
-    room: {
-      id: room.id,
-      name: room.name,
-    },
-  })
+-  return inertia.render('chat-rooms/show', { room })
++  return inertia.render('chat-rooms/show', {
++    room: {
++      id: room.id,
++      name: room.name,
++    },
++  })
 }
 ```
 
