@@ -668,7 +668,7 @@ export const deleteChatRoomValidator = vine.compile(
 
 app/controllers/chat_rooms_controller.tsを変更
 
-```ts
+```diff ts
 -  async destroy({ params }: HttpContext) {
 +  async destroy({ request, response }: HttpContext) {
 +    const { params } = await request.validateUsing(deleteChatRoomValidator)
