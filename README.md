@@ -300,7 +300,7 @@ inertia/pages/chat-rooms/index.tsxを変更
 import { Link, Head } from '@inertiajs/react'
 -import ChatRoom from '#models/chat_room'
 +import { InferPageProps } from '@adonisjs/inertia/types'
-import ChatRoomsController from '#controllers/chat_rooms_controller'
++import ChatRoomsController from '#controllers/chat_rooms_controller'
 const title = 'チャット履歴'
 -export default function Index(props: { rooms: ChatRoom[] }) {
 +export default function Index(props: InferPageProps<ChatRoomsController, 'index'>) {
@@ -328,7 +328,7 @@ inertia/pages/chat-rooms/show.tsxを変更
 import { Head, Link } from '@inertiajs/react'
 -import ChatRoom from '#models/chat_room'
 +import { InferPageProps } from '@adonisjs/inertia/types'
-import ChatRoomsController from '#controllers/chat_rooms_controller'
++import ChatRoomsController from '#controllers/chat_rooms_controller'
 -export default function Show(props: { room: ChatRoom }) {
 +export default function Show(props: InferPageProps<ChatRoomsController, 'show'>) {
   const { room } = props
@@ -409,35 +409,41 @@ export const updateChatRoomValidator = vine.compile(
 
 app/controllers/chat_rooms_controller.tsを変更
 
-```ts
-  async create({ inertia }: HttpContext) {
-    return inertia.render('chat-rooms/create')
+```diff ts
++ import { createChatRoomValidator, updateChatRoomValidator } from '#validators/chat_room'
+
+-  async create({}: HttpContext) {
++  async create({ inertia }: HttpContext) {
++    return inertia.render('chat-rooms/create')
   }
 
-  async store({ request, response }: HttpContext) {
-    const payload = await request.validateUsing(createChatRoomValidator)
-    const room = await ChatRoom.create(payload)
+-  async store({ request }: HttpContext) {
++  async store({ request, response }: HttpContext) {
++    const payload = await request.validateUsing(createChatRoomValidator)
++    const room = await ChatRoom.create(payload)
 
-    return response.redirect(`/chat-rooms/${room.id}`)
++    return response.redirect(`/chat-rooms/${room.id}`)
   }
 
-  async edit({ params, inertia }: HttpContext) {
-    const room = await ChatRoom.findOrFail(params.id)
-    return inertia.render('chat-rooms/edit', {
-      room: {
-        id: room.id,
-        name: room.name,
-      },
-    })
+-  async edit({ params }: HttpContext) {
++  async edit({ params, inertia }: HttpContext) {
++    const room = await ChatRoom.findOrFail(params.id)
++    return inertia.render('chat-rooms/edit', {
++      room: {
++        id: room.id,
++        name: room.name,
++      },
++    })
   }
 
-  async update({ params, request, response }: HttpContext) {
-    const payload = await request.validateUsing(updateChatRoomValidator)
-    const room = await ChatRoom.findOrFail(params.id)
-    room.merge(payload)
-    await room.save()
+-  async update({ params, request }: HttpContext) {}
++  async update({ params, request, response }: HttpContext) {
++    const payload = await request.validateUsing(updateChatRoomValidator)
++    const room = await ChatRoom.findOrFail(params.id)
++    room.merge(payload)
++    await room.save()
 
-    return response.redirect(`/chat-rooms/${room.id}`)
++    return response.redirect(`/chat-rooms/${room.id}`)
   }
 ```
 
@@ -602,6 +608,60 @@ export default function Edit(
     </>
   )
 }
+
+```
+
+index.tsxに新規作成リンクを追加
+
+```diff tsx
+<h2>{title}</h2>
++ <Link href="/chat-rooms/create">新規作成</Link>
+```
+
+show.tsxに編集、削除リンクを追加
+
+```diff tsx
+<h2>{room.name}</h2>
+<div
+  style={{
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '0.5rem',
+    width: '100%',
+  }}
+>
+  <Link
+    style={{
+      width: 'fit-content',
+    }}
+    href={`/chat-rooms/${room.id}/edit`}
+  >
+    編集
+  </Link>
+  <Link
+    style={{
+      color: 'red',
+      width: 'fit-content',
+      border: 'none',
+      textDecoration: 'underline',
+      fontSize: '1rem',
+      cursor: 'pointer',
+    }}
+    href={`/chat-rooms/${room.id}`}
+    method="delete"
+    as="button"
+  >
+    削除
+  </Link>
+  <Link
+    style={{
+      width: 'fit-content',
+    }}
+    href="/chat-rooms"
+  >
+    戻る
+  </Link>
+</div>
 
 ```
 
